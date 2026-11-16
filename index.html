@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Layton Safety 360</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <button id="go-home" class="brand" aria-label="Return to Safety 360 home"><img src="assets/layton-logo.png" alt="Layton"><span>SAFETY 360</span></button>
+    <nav>
+      <button data-view="pulse">Safety Pulse</button>
+      <button data-view="actions">Priority Actions</button>
+      <button data-view="insights">Safety Intelligence</button>
+      <button data-view="project">Project 360</button>
+      <button data-view="field">Field Capture</button>
+    </nav>
+  </header>
+  <section id="home" class="home active">
+    <div class="home-image" role="img" aria-label="Construction crew reviewing site plans before work begins"></div>
+    <div class="home-overlay"></div>
+    <div class="home-content">
+      <p class="eyebrow">LAYTON SAFETY 360</p>
+      <h1>Protect the people who build what’s next.</h1>
+      <p>Turn safety signals into accountable action—before serious harm occurs.</p>
+      <button id="enter-workspace" class="enter-btn">Enter Safety 360 <span>→</span></button>
+    </div>
+    <p class="home-footnote">Synthetic competition data · January 1, 2024 – September 30, 2026</p>
+  </section>
+  <main id="workspace" class="workspace">
+    <section class="workspace-top">
+      <div><p class="eyebrow">LEADERSHIP WORKSPACE</p><h1>Safety decisions, in full view.</h1><p id="workspace-copy">Select a state or project to focus the safety review.</p></div>
+      <div class="filters filters-inline"><label>STATE <select id="state"><option value="">All states</option></select></label><label>PROJECT <select id="project-filter"><option value="">All projects</option></select></label><button id="reset">Reset</button></div>
+    </section>
+    <section id="pulse" class="view">
+      <div id="decision-card" class="decision-card"></div><div id="kpis" class="kpis compact"></div>
+      <div class="two"><article><h2>Serious-risk focus</h2><p>Investigate the mechanisms most associated with lost-time outcomes in this scope.</p><div id="hazards" class="bars"></div><div id="hazard-evidence" class="hazard-evidence">Select a risk category to review connected evidence.</div></article><article class="brief"><div class="brief-nav"><p class="eyebrow">LEADERSHIP BRIEF</p><span id="brief-count"></span></div><h2 id="brief-title">Priority decision</h2><div id="brief-text"></div><div class="brief-controls"><button id="brief-prev" class="secondary">← Previous</button><button id="brief-next" class="secondary">Next →</button><button id="copy-brief">Copy brief</button></div></article></div>
+      <article id="replicate-card" class="replicate-card"></article>
+      <article class="workflow"><div><p class="eyebrow">SAFETY 360 WORKFLOW</p><h2>Signal → decision → verified control</h2><p>Safety 360 identifies a signal, routes an accountable action, and records the verification needed for closure. Field Capture makes the same loop available at the point of work.</p></div><button data-open-field>Open Field Capture</button></article>
+    </section>
+    <section id="actions" class="view">
+      <div class="section-head"><div><p class="eyebrow">ACTION MANAGEMENT</p><h2>Priority Actions</h2><p>Open a project, route the action, and track it through verification.</p></div><select id="priority-filter"><option value="all">All priority actions</option><option value="severe">Serious outcomes</option><option value="controls">Control completion gap</option><option value="closure">Closure backlog</option></select></div>
+      <div class="status-legend"><span class="status needs-review">Needs leadership review</span><span class="status sent">Action sent</span><span class="status in-progress">In progress</span><span class="status awaiting">Awaiting verification</span><span class="status verified">Verified closed</span></div>
+      <div id="action-cards" class="action-grid"></div>
+    </section>
+    <section id="insights" class="view">
+      <div class="section-head"><div><p class="eyebrow">EVIDENCE</p><h2>Safety Intelligence</h2><p>Use the evidence to understand where leadership attention will have the greatest value.</p></div><select id="metric"><option value="recordable">Recordable rate</option><option value="lta">LTA rate</option><option value="ptp">Daily PTP completion</option><option value="focus">Focus Walk completion</option></select></div>
+      <article><h2>State health at a glance</h2><p>Green indicates stronger controls and lower relative risk; amber indicates monitoring; red indicates leadership review. These are transparent prioritization signals, not performance grades.</p><div id="state-health" class="state-health"></div></article>
+      <div class="two"><article><h2>Safety performance over time</h2><div id="trend" class="trend"></div></article><article><h2>Overtime exposure</h2><p>Observed association between project overtime share and recordable rate. This does not establish causation.</p><div id="overtime-analysis" class="bars"></div></article></div>
+      <div class="two"><article><h2>State comparison</h2><div id="states-chart" class="bars"></div></article><article><h2>Risk versus control completion</h2><svg id="scatter" viewBox="0 0 520 300"></svg></article></div>
+      <div class="analysis-grid"><article id="attention-index"></article><article id="control-analysis"></article><article id="closure-analysis"></article><article id="conditions-analysis"></article></div>
+    </section>
+    <section id="project" class="view"><div class="section-head"><div><p class="eyebrow">PROJECT REVIEW</p><h2>Project 360</h2><p>Review the outcome, leading controls, action status, and next decision in one place.</p></div><select id="project-360"></select></div><div id="project-card"></div></section>
+    <section id="field" class="view">
+      <div class="section-head"><div><p class="eyebrow">FIELD CAPTURE</p><h2>Capture a safety signal at the point of work</h2><p>Submit a Good Catch, issue, plan, walk, or incident for supervisor review.</p></div></div>
+      <div class="field-layout"><article class="field-form-card"><form id="field-form"><div class="form-grid"><label class="form-label">REPORT TYPE <select id="capture-type" required><option>Good Catch</option><option>Safety Issue</option><option>Daily PTP</option><option>Weekly Focus Walk</option><option>Incident</option></select></label><label class="form-label">PROJECT <select id="capture-project" required></select></label><label class="form-label">HAZARD CATEGORY <select id="capture-hazard"><option>Falls</option><option>Struck-By</option><option>Caught-In or -Between</option><option>Electrocution</option><option>Other</option></select></label><label class="form-label">POTENTIAL SEVERITY <select id="capture-severity"><option>Low</option><option>Moderate</option><option>High</option><option>Serious</option></select></label><label class="form-label">SUGGESTED OWNER <select id="capture-owner"><option>Project Safety Manager</option><option>Superintendent</option><option>Project Manager</option></select></label><label class="form-label">FOLLOW-UP DUE <input id="capture-due" type="date"></label></div><label class="form-label">OBSERVATION <textarea id="capture-observation" rows="5" required placeholder="Describe the condition, task, location, and immediate control applied."></textarea></label><button id="capture-submit" type="submit">Submit for supervisor review</button><p id="capture-status" class="report-status" aria-live="polite"></p></form></article><article><p class="eyebrow">INCOMING REPORTS</p><h2>Supervisor review queue</h2><div id="capture-queue" class="capture-queue"><p class="empty-state">No field reports captured in this session.</p></div></article></div>
+    </section>
+  </main>
+  <dialog id="report-modal"><button class="close-report" aria-label="Close action report">×</button><p class="eyebrow">ACTION REPORT</p><h2 id="report-title">Send action report</h2><p id="report-summary"></p><div class="report-edit-grid"><label class="form-label">ROUTE TO <select id="report-owner"></select></label><label class="form-label">DUE DATE <input id="report-due" type="date"></label></div><label class="form-label">ACTION STATUS <select id="report-lifecycle"><option value="sent">Action sent</option><option value="in-progress">In progress</option><option value="awaiting">Awaiting verification</option><option value="verified">Verified closed</option></select></label><label class="form-label">LEADERSHIP ACTION <textarea id="report-action" rows="3"></textarea></label><label class="form-label">CLOSURE VERIFICATION <textarea id="report-verify" rows="3"></textarea></label><label class="form-label">MESSAGE <textarea id="report-message" rows="6"></textarea></label><div class="report-buttons"><button id="save-draft" class="secondary">Save draft</button><button id="update-action" class="secondary">Update action</button><button id="send-report">Send action report</button></div><p id="report-status" class="report-status" aria-live="polite"></p><small>Safety 360 prepares the report; the responsible leader reviews and edits it before routing. This prototype simulates workflow routing and closure tracking.</small></dialog>
+  <script src="app.js"></script>
+</body>
+</html>
