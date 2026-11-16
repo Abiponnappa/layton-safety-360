@@ -37,6 +37,16 @@ function setup(){
 }
 
 function scopeProjects(){return data.projects.filter(x=>(!selectedState||x.state===selectedState)&&(!selectedProject||x.job_id===selectedProject));}
+function syncProjectFilter(){
+  const options=data.projects.filter(x=>!selectedState||x.state===selectedState).sort((a,b)=>a.job_id.localeCompare(b.job_id));
+  const projectOptions=options.map(x=>'<option value="'+x.job_id+'">'+x.job_id+" · "+x.project_type+" · "+x.state+"</option>").join("");
+  $("project-filter").innerHTML='<option value="">All projects</option>'+projectOptions;
+  $("capture-project").innerHTML=projectOptions;
+  if(selectedProject&&options.some(x=>x.job_id===selectedProject)){
+    $("project-filter").value=selectedProject;
+    $("capture-project").value=selectedProject;
+  }
+}
 function syncProject360(){
   const options=data.projects.filter(x=>!selectedState||x.state===selectedState).sort((a,b)=>a.job_id.localeCompare(b.job_id));
   $("project-360").innerHTML=options.map(x=>'<option value="'+x.job_id+'">'+x.job_id+" · "+x.project_type+" · "+x.state+"</option>").join("");
@@ -87,10 +97,11 @@ function rateTone(v,base){return v<=base*.85?"green":v<=base*1.15?"amber":"red";
 function valueHtml(value,tone,label){return '<strong class="metric-value '+tone+'">'+value+'</strong><small>'+label+"</small>";}
 
 function render(){
-  const p=scopeProjects(),m=metrics(p),scope=selectedProject||selectedState||"Selected scope",top=ranked(p,m),base=metrics(data.projects);
+  const p=scopeProjects(),m=metrics(p),scope=selectedProject||selectedState||"Portfolio",top=ranked(p,m),base=metrics(data.projects);
   briefIndex=Math.min(briefIndex,Math.max(top.length-1,0));
+  syncProjectFilter();
   syncProject360();
-  $("workspace-copy").textContent=scope+" · focus the review, route an accountable action, and verify closure.";
+  $("workspace-copy").textContent=scope+" view · focus the review, assign an accountable action, and verify the control.";
   $("decision-card").innerHTML=top.length?'<p class="eyebrow">TOP SAFETY DECISIONS</p><h2>What leadership should direct now</h2><p>Priorities combine serious outcomes, preventive-control completion, closure backlog, and overtime exposure. They are decision-support signals, not predictions.</p><div class="decision-list">'+top.slice(0,3).map((z,i)=>{
     const s=statusFor(z.x.job_id);
     return '<div class="decision-item"><span class="status '+s+'">'+(i===0?"First priority · ":"")+statusLabel(s)+'</span><h3>'+z.x.job_id+" · "+z.x.state+'</h3><p><b>Decision:</b> '+esc(z.decision)+'</p><p class="mini"><b>Why now:</b> '+esc(z.f.join(" · "))+'</p><p class="mini"><b>Owner:</b> '+esc(z.owner)+'</p><button onclick="openProject(\''+z.x.job_id+'\')">Review evidence</button> <button onclick="sendActionReport(\''+z.x.job_id+'\')">Route action</button></div>';
@@ -100,7 +111,16 @@ function render(){
     ["Control completion",valueHtml((m.focus*100).toFixed(1)+"%",controlTone(m.focus),"Focus Walk completion")],
     ["Closure pressure",valueHtml(m.over,backlogTone(p.length?m.over/p.length:0),"overdue issues")]
   ].map(x=>'<div class="kpi"><label>'+x[0]+"</label>"+x[1]+"</div>").join("");
-  renderBrief(m,top);renderHazards();renderActions();renderStates();renderTrend();renderOvertime();renderScatter();renderDeepAnalysis(p,m,top);renderProject();renderReplicate(p,m);renderCaptureQueue();
+  renderActionSummary(p,m,top);renderBrief(m,top);renderHazards();renderActions();renderStates();renderTrend();renderOvertime();renderScatter();renderDeepAnalysis(p,m,top);renderProject();renderReplicate(p,m);renderCaptureQueue();
+}
+function renderActionSummary(p,m,top){
+  const serious=p.filter(x=>x.lta_incidents>0).length;
+  const priorityProjects=top.filter(z=>z.trigger!=="leading practice");
+  const review=priorityProjects.filter(z=>statusFor(z.x.job_id)==="needs-review").length;
+  const verification=priorityProjects.filter(z=>statusFor(z.x.job_id)==="awaiting").length;
+  const g={};scopeIncidents().filter(x=>x.INCIDENT_CLASSIFICATION==="Lost Time Accident").forEach(x=>g[x.OSHA_HAZARD_CATEGORY]=(g[x.OSHA_HAZARD_CATEGORY]||0)+1);
+  const hazard=Object.entries(g).sort((a,b)=>b[1]-a[1])[0]?.[0]||"No LTA hazard pattern";
+  $("portfolio-action-summary").innerHTML='<p class="eyebrow">PORTFOLIO ACTIONS THIS WEEK</p><h2>What needs a leader’s attention</h2><div class="summary-grid"><div><b class="metric-value '+(review?"red":"green")+'">'+review+'</b><span>priority actions need leadership review</span></div><div><b class="metric-value '+(serious?"red":"green")+'">'+serious+'</b><span>projects with a serious outcome</span></div><div><b class="metric-value '+(verification?"amber":"green")+'">'+verification+'</b><span>actions awaiting closure verification</span></div><div><b>'+esc(hazard)+'</b><span>leading serious-risk mechanism</span></div></div><p class="next-step"><b>Next leadership decision:</b> Review the first priority, confirm the accountable owner and due date, then verify the control—not only the report.</p><button onclick="show(\'actions\')">Review priority actions</button>';
 }
 function renderBrief(m,top){
   const current=top[briefIndex];
@@ -143,10 +163,20 @@ function renderStates(){
   const key=$("metric").value;
   const scoped=scopeProjects();
   const a=[...new Set(scoped.map(x=>x.state))].map(s=>{const projects=scoped.filter(x=>x.state===s),m=metrics(projects);return {s,m,projects,h:health(m,projects)};});
-  const value=x=>key==="recordable"?x.m.rr:key==="lta"?x.m.lr:key==="ptp"?x.m.ptp:x.m.focus;
+  const metric={
+    recordable:{label:"Recordable rate",detail:"recordable events per 200,000 worked hours",value:x=>x.m.rr,format:v=>v.toFixed(3),tone:(x,base)=>rateTone(x.m.rr,base.rr)},
+    lta:{label:"LTA rate",detail:"lost-time accidents per 200,000 worked hours",value:x=>x.m.lr,format:v=>v.toFixed(3),tone:(x,base)=>rateTone(x.m.lr,base.lr)},
+    ptp:{label:"Daily PTP completion",detail:"submitted on days with recorded work",value:x=>x.m.ptp,format:v=>(v*100).toFixed(1)+"%",tone:x=>controlTone(x.m.ptp)},
+    focus:{label:"Focus Walk completion",detail:"submitted in weeks with recorded work",value:x=>x.m.focus,format:v=>(v*100).toFixed(1)+"%",tone:x=>controlTone(x.m.focus)}
+  }[key];
+  const base=metrics(scoped);
+  const value=metric.value;
   const max=Math.max(...a.map(value),1);
-  $("state-health").innerHTML=a.slice().sort((a,b)=>a.s.localeCompare(b.s)).map(x=>'<div class="health-card '+x.h.tone+'" onclick="pickState(\''+x.s+'\')"><div class="health-top"><strong>'+x.s+'</strong><span class="health-status '+x.h.tone+'">'+x.h.label+'</span></div><p><b class="metric-value '+rateTone(x.m.lr,metrics(scoped).lr)+'">'+x.m.lr.toFixed(3)+"</b> LTA rate · <b class=\"metric-value "+controlTone(x.m.focus)+'">'+(x.m.focus*100).toFixed(1)+"%</b> Focus Walk · "+(x.m.over/x.projects.length).toFixed(0)+" overdue/project</p></div>").join("")||"<p>No matching state data.</p>";
-  $("states-chart").innerHTML=a.slice().sort((a,b)=>value(b)-value(a)).map(x=>{const v=value(x),t=(key==="ptp"||key==="focus")?controlTone(v):rateTone(v,metrics(scoped).rr);return '<div class="bar-row" onclick="pickState(\''+x.s+'\')"><span>'+x.s+'</span><div class="track"><div class="bar '+t+'" style="width:'+(v/max*100)+'%">'+((key==="ptp"||key==="focus")?(v*100).toFixed(1)+"%":v.toFixed(3))+"</div></div></div>";}).join("")||"<p>No matching state data.</p>";
+  $("state-health-title").textContent="State health — "+metric.label;
+  $("state-health-note").textContent="Primary metric: "+metric.detail+". Health status still reflects serious outcomes, leading controls, and closure signals—not this metric alone.";
+  $("state-comparison-title").textContent="State comparison — "+metric.label;
+  $("state-health").innerHTML=a.slice().sort((a,b)=>a.s.localeCompare(b.s)).map(x=>'<div class="health-card '+x.h.tone+'" onclick="pickState(\''+x.s+'\')"><div class="health-top"><strong>'+x.s+'</strong><span class="health-status '+x.h.tone+'">'+x.h.label+'</span></div><p><b class="metric-value '+metric.tone(x,base)+'">'+metric.format(value(x))+"</b> "+metric.label+' · <b>'+x.m.lta+' LTA'+(x.m.lta===1?"":"s")+'</b> · '+(x.m.over/x.projects.length).toFixed(0)+" overdue/project</p></div>").join("")||"<p>No matching state data.</p>";
+  $("states-chart").innerHTML=a.slice().sort((a,b)=>value(b)-value(a)).map(x=>{const v=value(x),t=metric.tone(x,base);return '<div class="bar-row" onclick="pickState(\''+x.s+'\')"><span>'+x.s+'</span><div class="track"><div class="bar '+t+'" style="width:'+(v/max*100)+'%">'+metric.format(v)+"</div></div></div>";}).join("")||"<p>No matching state data.</p>";
 }
 function pickState(s){selectedState=s;selectedProject="";$("state").value=s;$("project-filter").value="";render();show("pulse");}
 function renderTrend(){
@@ -182,15 +212,15 @@ function renderDeepAnalysis(p,m,top){
     ["Control completion gap",(topProject.x.daily_ptp_compliance<.85?18:0)+(topProject.x.weekly_focus_walk_compliance<.80?18:0)],
     ["Overtime / elevated rate",(topProject.x.overtime_share>.20&&topProject.x.recordable_incident_rate>m.rr?12:0)+(topProject.x.recordable_incident_rate>m.rr*1.5?8:0)]
   ]:[];
-  $("attention-index").innerHTML=topProject?'<p class="eyebrow">TRANSPARENT PRIORITIZATION</p><h2>Safety Attention Index</h2><p><b>'+topProject.x.job_id+'</b> has the highest current attention score in this scope: <b>'+attention+'</b>.</p><div class="scorebar"><div style="width:'+Math.min(attention/180*100,100)+'%"></div></div><div class="component-list">'+components.map(x=>'<span>'+x[0]+' <b>'+x[1]+'</b></span>').join("")+'</div><p class="analysis-note">This is a transparent action-prioritization rule, not a prediction model.</p>':'<h2>Safety Attention Index</h2><p>No projects match this scope.</p>';
+  $("attention-index").innerHTML=topProject?'<p class="eyebrow">TRANSPARENT PRIORITIZATION</p><h2>Safety Attention Index</h2><p><b>'+topProject.x.job_id+'</b> has the highest current attention score in this scope: <b>'+attention+'</b>.</p><div class="scorebar"><div style="width:'+Math.min(attention/180*100,100)+'%"></div></div><div class="component-list">'+components.map(x=>'<span>'+x[0]+' <b>'+x[1]+'</b></span>').join("")+'</div><p class="next-step"><b>Next leadership decision:</b> Open '+topProject.x.job_id+' and confirm the recommended action, owner, and closure evidence.</p><p class="analysis-note">This is a transparent action-prioritization rule, not a prediction model.</p>':'<h2>Safety Attention Index</h2><p>No projects match this scope.</p>';
   const ptpLow=p.filter(x=>x.daily_ptp_compliance<.85),ptpHigh=p.filter(x=>x.daily_ptp_compliance>=.85),focusLow=p.filter(x=>x.weekly_focus_walk_compliance<.80),focusHigh=p.filter(x=>x.weekly_focus_walk_compliance>=.80);
-  $("control-analysis").innerHTML='<p class="eyebrow">CONTROL EFFECTIVENESS</p><h2>Preventive-control associations</h2><div class="mini-metrics"><div><span>PTP below 85%</span><b class="metric-value '+rateTone(groupedRate(ptpLow),m.rr)+'">'+groupedRate(ptpLow).toFixed(3)+'</b><small>recordable rate</small></div><div><span>PTP at or above 85%</span><b class="metric-value '+rateTone(groupedRate(ptpHigh),m.rr)+'">'+groupedRate(ptpHigh).toFixed(3)+'</b><small>recordable rate</small></div><div><span>Focus Walk below 80%</span><b class="metric-value '+rateTone(groupedRate(focusLow),m.rr)+'">'+groupedRate(focusLow).toFixed(3)+'</b><small>recordable rate</small></div><div><span>Focus Walk at or above 80%</span><b class="metric-value '+rateTone(groupedRate(focusHigh),m.rr)+'">'+groupedRate(focusHigh).toFixed(3)+'</b><small>recordable rate</small></div></div><p class="analysis-note">Comparisons are exposure-adjusted and descriptive; they do not establish causation.</p>';
+  $("control-analysis").innerHTML='<p class="eyebrow">CONTROL EFFECTIVENESS</p><h2>Preventive-control associations</h2><p>Compare planning and inspection completion groups to decide where leadership should strengthen routine controls.</p><div class="mini-metrics"><div><span>PTP below 85%</span><b class="metric-value '+rateTone(groupedRate(ptpLow),m.rr)+'">'+groupedRate(ptpLow).toFixed(3)+'</b><small>recordable rate</small></div><div><span>PTP at or above 85%</span><b class="metric-value '+rateTone(groupedRate(ptpHigh),m.rr)+'">'+groupedRate(ptpHigh).toFixed(3)+'</b><small>recordable rate</small></div><div><span>Focus Walk below 80%</span><b class="metric-value '+rateTone(groupedRate(focusLow),m.rr)+'">'+groupedRate(focusLow).toFixed(3)+'</b><small>recordable rate</small></div><div><span>Focus Walk at or above 80%</span><b class="metric-value '+rateTone(groupedRate(focusHigh),m.rr)+'">'+groupedRate(focusHigh).toFixed(3)+'</b><small>recordable rate</small></div></div><p class="next-step"><b>Next leadership decision:</b> Ask projects below the completion thresholds to restore planning and inspection discipline before the next work period.</p><p class="analysis-note">Comparisons are exposure-adjusted and descriptive; they do not establish causation.</p>';
   const followRequired=p.reduce((s,x)=>s+(x.good_catches_requiring_follow_up||0),0),followOpen=p.reduce((s,x)=>s+x.good_catch_follow_ups_open,0),issuesOpen=p.reduce((s,x)=>s+x.issues_currently_open_or_in_progress,0),issuesOver=p.reduce((s,x)=>s+x.issues_marked_overdue,0);
   const followRate=followRequired?followOpen/followRequired:0,overRate=issuesOpen?issuesOver/issuesOpen:0;
-  $("closure-analysis").innerHTML='<p class="eyebrow">CLOSURE ACCOUNTABILITY</p><h2>Does reporting become verified control?</h2><div class="mini-metrics two-up"><div><span>Open Good Catch follow-ups</span><b class="metric-value '+(followRate>.45?"red":followRate>.25?"amber":"green")+'">'+(followRate*100).toFixed(1)+'%</b><small>'+followOpen+' of '+followRequired+' requiring follow-up</small></div><div><span>Overdue issue pressure</span><b class="metric-value '+(overRate>.6?"red":overRate>.35?"amber":"green")+'">'+(overRate*100).toFixed(1)+'%</b><small>'+issuesOver+' overdue / '+issuesOpen+' open or in progress</small></div></div><p class="analysis-note">Leadership should verify corrective action, not treat a report as a completed control.</p>';
+  $("closure-analysis").innerHTML='<p class="eyebrow">CLOSURE ACCOUNTABILITY</p><h2>Does reporting become verified control?</h2><p>These measures show whether a reported condition is moving through follow-up and closure.</p><div class="mini-metrics two-up"><div><span>Open Good Catch follow-ups</span><b class="metric-value '+(followRate>.45?"red":followRate>.25?"amber":"green")+'">'+(followRate*100).toFixed(1)+'%</b><small>'+followOpen+' of '+followRequired+' requiring follow-up</small></div><div><span>Overdue issue pressure</span><b class="metric-value '+(overRate>.6?"red":overRate>.35?"amber":"green")+'">'+(overRate*100).toFixed(1)+'%</b><small>'+issuesOver+' overdue / '+issuesOpen+' open or in progress</small></div></div><p class="next-step"><b>Next leadership decision:</b> Escalate aged high-severity items until correction evidence and field verification are recorded.</p><p class="analysis-note">Leadership should verify corrective action, not treat a report as a completed control.</p>';
   const weather=(data.deep?.condition_weather_profile||[]).filter(x=>x.meets_100k_hour_comparison_threshold).sort((a,b)=>b.recordable_incident_rate-a.recordable_incident_rate).slice(0,2);
   const work=(data.deep?.condition_work_activity_profile||[]).filter(x=>x.meets_100k_hour_comparison_threshold).sort((a,b)=>b.recordable_incident_rate-a.recordable_incident_rate).slice(0,2);
-  $("conditions-analysis").innerHTML='<p class="eyebrow">WORK-CONDITION CONTEXT</p><h2>Where exposure merits extra planning</h2><div class="condition-list"><div><b>Weather</b>'+weather.map(x=>'<span>'+x.group+' · '+Number(x.recordable_incident_rate).toFixed(3)+' recordable rate</span>').join("")+'</div><div><b>Work activity</b>'+work.map(x=>'<span>'+x.group+' · '+Number(x.recordable_incident_rate).toFixed(3)+' recordable rate</span>').join("")+'</div></div><p class="analysis-note">Portfolio-wide condition comparison; use it to focus pre-task planning, not to claim a condition caused an incident.</p>';
+  $("conditions-analysis").innerHTML='<p class="eyebrow">WORK-CONDITION CONTEXT</p><h2>Where exposure merits extra planning</h2><p>Use recurring conditions to focus the next pre-task plan and Focus Walk.</p><div class="condition-list"><div><b>Weather</b>'+weather.map(x=>'<span>'+x.group+' · '+Number(x.recordable_incident_rate).toFixed(3)+' recordable rate</span>').join("")+'</div><div><b>Work activity</b>'+work.map(x=>'<span>'+x.group+' · '+Number(x.recordable_incident_rate).toFixed(3)+' recordable rate</span>').join("")+'</div></div><p class="next-step"><b>Next leadership decision:</b> Ask teams doing these activities to address the identified condition in their next PTP and Focus Walk.</p><p class="analysis-note">Portfolio-wide condition comparison; use it to focus pre-task planning, not to claim a condition caused an incident.</p>';
 }
 function renderScatter(){
   const p=scopeProjects();
@@ -200,7 +230,20 @@ function renderScatter(){
 function renderReplicate(p,m){
   const candidates=p.filter(x=>!x.lta_incidents&&x.recordable_incident_rate<=m.rr&&x.daily_ptp_compliance>=.9&&x.weekly_focus_walk_compliance>=.9&&x.issues_marked_overdue<20).sort((a,b)=>b.weekly_focus_walk_compliance-a.weekly_focus_walk_compliance||a.issues_marked_overdue-b.issues_marked_overdue);
   const x=candidates[0];
-  $("replicate-card").innerHTML=x?'<p class="eyebrow">POTENTIAL LEADING-CONTROL PROFILE</p><h2>'+x.job_id+" · "+x.state+'</h2><p>This project shows stronger preventive-control indicators than the selected-scope benchmark: <b>"+(x.daily_ptp_compliance*100).toFixed(1)+"%</b> Daily PTP versus <b>"+(m.ptp*100).toFixed(1)+"%</b>, <b>"+(x.weekly_focus_walk_compliance*100).toFixed(1)+"%</b> Focus Walk versus <b>"+(m.focus*100).toFixed(1)+"%</b>, and <b>"+x.issues_marked_overdue+"</b> overdue issues.</p><p>Leadership should validate its field routines before standardizing any practice elsewhere; this profile does not establish causation.</p><button onclick="openProject(\''+x.job_id+'\')">Compare Project 360</button>':"<p class=\"eyebrow\">POTENTIAL LEADING-CONTROL PROFILE</p><h2>No project meets all leading-control thresholds in this selected scope.</h2><p>Expand the filter to compare projects with stronger preventive-control indicators.</p>";
+  const signals=[
+    {name:"no LTA",pass:y=>!y.lta_incidents},
+    {name:"below-scope recordable rate",pass:y=>y.recordable_incident_rate<=m.rr},
+    {name:"Daily PTP at least 90%",pass:y=>y.daily_ptp_compliance>=.9},
+    {name:"Focus Walk at least 90%",pass:y=>y.weekly_focus_walk_compliance>=.9},
+    {name:"fewer than 20 overdue issues",pass:y=>y.issues_marked_overdue<20}
+  ];
+  const closest=p.map(y=>({y,passes:signals.filter(s=>s.pass(y)),gaps:signals.filter(s=>!s.pass(y))})).sort((a,b)=>b.passes.length-a.passes.length||a.y.issues_marked_overdue-b.y.issues_marked_overdue||a.y.recordable_incident_rate-b.y.recordable_incident_rate)[0];
+  if(x){
+    $("replicate-card").innerHTML='<p class="eyebrow">POTENTIAL LEADING-CONTROL PROFILE</p><h2>'+x.job_id+" · "+x.state+'</h2><p>This project meets all five preventive-control signals in the selected scope: <b>'+(x.daily_ptp_compliance*100).toFixed(1)+'%</b> Daily PTP, <b>'+(x.weekly_focus_walk_compliance*100).toFixed(1)+'%</b> Focus Walk, and <b>'+x.issues_marked_overdue+'</b> overdue issues.</p><p class="next-step"><b>Next leadership decision:</b> Validate the field routine with this project before sharing it with comparable teams.</p><p class="analysis-note">This profile identifies a practice to investigate; it does not establish causation.</p><button onclick="openProject(\''+x.job_id+'\')">Compare Project 360</button>';
+  }else if(closest){
+    const y=closest.y;
+    $("replicate-card").innerHTML='<p class="eyebrow">PROMISING PRACTICE TO VALIDATE</p><h2>'+y.job_id+" · "+y.state+' meets '+closest.passes.length+' of 5 preventive-control signals.</h2><p>Strongest signals: '+closest.passes.map(s=>s.name).join(", ")+'. Remaining gap: <b>'+closest.gaps.map(s=>s.name).join(", ")+'</b>.</p><p class="next-step"><b>Next leadership decision:</b> Review this project’s routine in the field, address the remaining gap, then decide whether any practice should be adapted elsewhere.</p><p class="analysis-note">This is a candidate for learning—not proof that its practices caused an outcome.</p><button onclick="openProject(\''+y.job_id+'\')">Review Project 360</button>';
+  }else{$("replicate-card").innerHTML='<p class="eyebrow">PROMISING PRACTICE TO VALIDATE</p><h2>No projects match this selected scope.</h2><p>Choose a broader state or portfolio view to identify a project for field learning.</p>';}
 }
 function renderProject(){
   const id=selectedProject||$("project-360").value;if(!id)return;
