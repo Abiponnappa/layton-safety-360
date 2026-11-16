@@ -1,0 +1,4 @@
+safety_theme,issues,overdue_issues,good_catches,open_good_catch_follow_ups,incidents,recordable_incidents,ltas,category_alignment_note
+Fall-related,206,184,226,111,23,15,13,"Cross-source labels are related but not identical; interpret as a theme, not a direct one-to-one mapping."
+Electrical,209,150,196,50,11,2,2,"Cross-source labels are related but not identical; interpret as a theme, not a direct one-to-one mapping."
+Struck-by,189,154,187,101,17,9,6,"Cross-source labels are related but not identical; interpret as a theme, not a direct one-to-one mapping."

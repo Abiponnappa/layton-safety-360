@@ -1,0 +1,8 @@
+group,worked_days_or_weeks,total_hours,recordable_incidents,lta_incidents,recordable_incident_rate,lta_rate,issues_opened,issues_per_100k_hours,good_catches,good_catches_per_100k_hours,meets_100k_hour_comparison_threshold
+Structural framing,2121,1434072.5,9,4,1.255167,0.557852,272,18.966963,137,9.553213,1
+Concrete placement,2238,1523331.5,9,5,1.181621,0.656456,293,19.234159,168,11.02846,1
+Excavation and grading,2204,1496426.2,8,5,1.069214,0.668259,282,18.844899,144,9.622927,1
+Roofing and envelope,2132,1429269.3,6,4,0.83959,0.559727,282,19.730362,134,9.37542,1
+Overhead MEP rough-in,2099,1433389.2,6,2,0.837177,0.279059,279,19.464358,139,9.697296,1
+Systems testing,2102,1418267.5,5,1,0.705086,0.141017,302,21.293585,150,10.576284,1
+Drywall and finishes,2140,1452747.7,4,3,0.550681,0.41301,290,19.962172,128,8.81089,1
