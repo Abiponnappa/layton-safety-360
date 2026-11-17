@@ -11,6 +11,14 @@ Safety 360 prioritizes leadership attention using exposure-adjusted safety outco
 - Daily PTP and Weekly Focus Walk completion are calculated from expected submissions and actual submissions.
 - Closure indicators include overdue safety issues, open/in-progress issues, Good Catch follow-ups required, and Good Catch follow-ups still open.
 
+### Record interpretation
+
+- **Safety Issues** are hazards successfully detected during pre-work inspection, before injury or work stoppage.
+- **Good Catches** are hazards successfully detected during work, before injury or work stoppage.
+- **Incidents** are independent events that resulted in injury or work stoppage.
+
+Safety Issue, Good Catch, and incident records may be compared by project, period, or hazard category. They are not case-level links: the analysis does not assume a detected hazard later became an incident. Reporting volume is not a negative safety signal; closure measures evaluate unresolved follow-up separately.
+
 ## Analytical layers
 
 ### 1. Serious-risk mechanism
@@ -32,7 +40,7 @@ Safety 360 measures whether identified hazards become verified controls:
 - Open Good Catch follow-ups / Good Catch follow-ups required
 - Overdue issues / open or in-progress issues
 
-This focuses leadership on hazard resolution, rather than reporting volume alone.
+This focuses leadership on hazard resolution, rather than reporting volume alone. “Overdue” and “open or in-progress” are different measures and are reported separately.
 
 ### 5. Fair peer benchmark
 

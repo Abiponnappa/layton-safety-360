@@ -26,6 +26,12 @@ Upload this folder to a GitHub repository and import it into Vercel. The app is 
 - Field Capture is a working in-browser intake and supervisor-review workflow for the MVP. Reports can be edited or deleted before supervisor review. Production deployment would connect it to approved Layton systems and persistent storage.
 - The Home background is illustrative prototype imagery. It is not Layton project imagery and contains no safety data.
 
+## Record interpretation
+
+- Safety Issues and Good Catches represent successful hazard detection before injury or work stoppage; their reporting volume is not treated as a negative safety signal.
+- Incidents are independent injury or work-stoppage events. The app compares record types by project, period, or hazard category but does not link an Issue or Good Catch to a later incident.
+- Closure measures intentionally distinguish overdue issues, open/in-progress issues, and Good Catch follow-ups still open.
+
 ## Leadership decision logic
 
 See [deep_analysis_methodology.md](deep_analysis_methodology.md) for the exposure-adjusted analysis approach, transparent prioritization logic, peer benchmark method, and limitations.
@@ -40,3 +46,7 @@ Safety 360 ranks projects using observed portfolio signals and selects a distinc
 - Potential leading-control profile: identify a project with stronger preventive indicators, then validate field routines before scaling any practice.
 
 Each recommendation names the evidence, accountable role, and verification condition. It is decision support based on observed relationships; it does not claim causation or predict future incidents.
+
+## Validation
+
+Run `python3 scripts/validate_data.py` to reconcile the project summary, monthly records, incident classifications, and browser payload before submission. See [DATA_VALIDATION.md](DATA_VALIDATION.md) for the checks and latest validation scope.
