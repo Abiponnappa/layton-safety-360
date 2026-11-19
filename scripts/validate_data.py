@@ -23,6 +23,9 @@ def check(condition, message):
 projects = pd.read_csv(DATA / "project_summary.csv")
 monthly = pd.read_csv(DATA / "project_monthly.csv")
 incidents = pd.read_csv(DATA / "safety_incidents.csv", encoding="utf-8-sig")
+raw_journals = pd.read_csv(DATA / "raw" / "daily_journals.csv", encoding="utf-8-sig")
+raw_issues = pd.read_csv(DATA / "raw" / "issues.csv", encoding="utf-8-sig")
+raw_jobs = pd.read_csv(DATA / "raw" / "jobs.csv", encoding="utf-8-sig")
 payload = json.loads((DATA / "app_data.json").read_text(encoding="utf-8"))
 
 check(projects["job_id"].is_unique, "project summary has one row per project")
@@ -41,6 +44,17 @@ expected_lta_rate = summary["lta_incidents"] * 200000 / summary["total_hours"]
 check((summary["recordable_incident_rate"] - expected_recordable_rate).abs().max() < EPSILON, "recordable rate uses 200,000-hour formula")
 check((summary["lta_rate"] - expected_lta_rate).abs().max() < EPSILON, "LTA rate uses 200,000-hour formula")
 
+raw_journals["date"] = pd.to_datetime(raw_journals["JOURNAL_DATE"])
+weekend_quality_flag = (raw_journals.date.dt.dayofweek >= 5) & raw_journals.REGULAR_HOURS.eq(0)
+expected_hours = raw_journals.loc[~weekend_quality_flag].groupby("JOB_ID").TOTAL_HOURS.sum().sort_index()
+check((summary["total_hours"] - expected_hours.reindex(summary.index, fill_value=0)).abs().max() < EPSILON, "quality-adjusted hours exclude weekend zero-regular-hour records")
+check(int(summary["quality_excluded_rows"].sum()) == int(weekend_quality_flag.sum()), "quality exclusion row count reconciles to raw journals")
+check(abs(summary["quality_excluded_hours"].sum() - raw_journals.loc[weekend_quality_flag, "TOTAL_HOURS"].sum()) < EPSILON, "quality exclusion hours reconcile to raw journals")
+
+raw_issue_status = raw_issues.merge(raw_jobs[["JOB_ID", "PROJECT_STATUS"]], on="JOB_ID", how="left")
+expected_active_unresolved = raw_issue_status.assign(active_unresolved=raw_issue_status.PROJECT_STATUS.ne("Completed") & raw_issue_status.STATUS.isin(["Open", "In Progress"])).groupby("JOB_ID").active_unresolved.sum()
+check((summary["active_unresolved_safety_issues"] - expected_active_unresolved.reindex(summary.index, fill_value=0)).abs().max() == 0, "completed-project issues are excluded from active unresolved controls")
+
 recordable_classes = {"REC", "RECR", "Lost Time Accident"}
 incident_recordables = incidents[incidents["INCIDENT_CLASSIFICATION"].isin(recordable_classes)].groupby("JOB_ID").size()
 incident_ltas = incidents[incidents["INCIDENT_CLASSIFICATION"].eq("Lost Time Accident")].groupby("JOB_ID").size()
@@ -48,7 +62,7 @@ check((summary["recordable_incidents"] - incident_recordables.reindex(summary.in
 check((summary["lta_incidents"] - incident_ltas.reindex(summary.index, fill_value=0)).abs().max() == 0, "project LTA counts reconcile to incident classifications")
 
 payload_projects = pd.DataFrame(payload["projects"]).set_index("job_id").sort_index()
-for field in ["total_hours", "recordable_incidents", "lta_incidents", "issues_marked_overdue", "issues_currently_open_or_in_progress", "good_catch_follow_ups_open"]:
+for field in ["total_hours", "recordable_incidents", "lta_incidents", "active_unresolved_safety_issues", "good_catch_follow_ups_open", "first_90_ptp_compliance", "first_90_focus_walk_compliance"]:
     difference = (summary[field] - payload_projects[field]).abs().max()
     check(difference < EPSILON, f"browser payload {field} matches project summary")
 
