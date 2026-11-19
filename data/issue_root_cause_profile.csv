@@ -1,8 +1,11 @@
-group,issue_count,share_of_issues,high_or_critical_count,overdue_count,open_or_in_progress_count,closed_count
-Planning,597,0.2985,405,428,276,321
-Procedure,403,0.2015,403,372,210,193
-Equipment,209,0.1045,0,150,104,105
-Guarding,206,0.103,206,184,114,92
-Housekeeping,205,0.1025,0,133,83,122
-Inspection,191,0.0955,191,168,90,101
-Coordination,189,0.0945,189,154,89,100
+HAZARD_CATEGORY,Coordination,Equipment,Guarding,Housekeeping,Inspection,Planning,Procedure
+Confined Space,0,0,0,0,0,0,188
+Electrical,0,209,0,0,0,0,0
+Ergonomics,0,0,0,0,0,192,0
+Excavation,0,0,0,0,0,201,0
+Fall Protection,0,0,206,0,0,0,0
+Fire Prevention,0,0,0,0,0,0,215
+Housekeeping,0,0,0,205,0,0,0
+Ladders,0,0,0,0,0,204,0
+Scaffolding,0,0,0,0,191,0,0
+Struck-By,189,0,0,0,0,0,0

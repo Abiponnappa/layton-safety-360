@@ -1,3 +1,3 @@
-group,worked_days_or_weeks,total_hours,recordable_incidents,lta_incidents,recordable_incident_rate,lta_rate,issues_opened,issues_per_100k_hours,good_catches,good_catches_per_100k_hours,meets_100k_hour_comparison_threshold
-Submitted,13119,8877107.2,42,22,0.946254,0.495657,1745,19.657305,885,9.969464,1
-Missed,1917,1310396.7,5,2,0.763128,0.305251,255,19.459756,115,8.775968,1
+group,worked_days_or_weeks,total_hours,recordable_incidents,lta_incidents,issues_opened,good_catches,recordable_incident_rate,lta_rate,issues_per_100k_hours,good_catches_per_100k_hours,meets_100k_hour_comparison_threshold
+Missed,1917,1303200.4,5,2,255,115,0.7673416920375409,0.30693667681501635,19.567213146957293,8.82442945843172,1
+Submitted,13119,8832933.7,42,22,1745,885,0.9509864202875202,0.4981357439601296,19.755610754782413,10.019321213743517,1

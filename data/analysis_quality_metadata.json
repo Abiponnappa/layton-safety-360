@@ -1,0 +1,9 @@
+{
+  "synthetic_data": true,
+  "analysis_period": "2024-01-01 to 2026-09-30",
+  "weekend_overtime_only_rows_excluded_from_rate_denominators": 485,
+  "weekend_overtime_only_hours_excluded_from_rate_denominators": 51369.8,
+  "completed_project_open_or_in_progress_issues_treated_closed": 485,
+  "issue_due_dates_used_as_compliance_measure": false,
+  "lta_lesson_number_used": false
+}
